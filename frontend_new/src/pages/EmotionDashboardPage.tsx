@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Download, Edit } from 'lucide-react';
 import Navigation from '../components/Navigation';
 import EmergencyButton from '../components/EmergencyButton';
@@ -7,8 +8,41 @@ import EmotionWave from '../components/EmotionWave';
 import PersonalPortrait from '../components/PersonalPortrait';
 import GrowthMilestones from '../components/GrowthMilestones';
 import TonightRecommendations from '../components/TonightRecommendations';
+import { authApi } from '../lib/api';
+import type { AuthUser } from '@/types';
 
 const EmotionDashboardPage: React.FC = () => {
+  const navigate = useNavigate();
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
+
+  useEffect(() => {
+    authApi.me()
+      .then(res => {
+        if (res.data?.code === 200) setUser(res.data.data);
+      })
+      .catch(() => {})
+      .finally(() => setAuthLoading(false));
+  }, []);
+
+  if (!authLoading && !user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#1A153A] via-[#3D2C5E] to-[#1A153A] flex items-center justify-center">
+        <div className="glass-card p-8 text-center max-w-sm mx-4">
+          <p className="text-4xl mb-4">🌸</p>
+          <h2 className="text-lg font-medium text-[#F5F0EB] mb-2">登录后查看情绪花园</h2>
+          <p className="text-sm text-[#F5F0EB]/60 mb-4">登录后你的情绪数据会在这里可视化展示</p>
+          <button 
+            onClick={() => navigate('/')} 
+            className="w-full py-3 bg-gradient-to-r from-pink-500/80 to-purple-500/80 rounded-2xl text-white"
+          >
+            去登录 →
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#1A153A] via-[#3D2C5E] to-[#1A153A] relative overflow-hidden">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -60,10 +94,10 @@ const EmotionDashboardPage: React.FC = () => {
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <PersonalPortrait />
-          <GrowthMilestones />
+          <TonightRecommendations />
         </div>
         
-        <TonightRecommendations />
+        <GrowthMilestones />
       </div>
 
       <Navigation currentPath="/dashboard" />

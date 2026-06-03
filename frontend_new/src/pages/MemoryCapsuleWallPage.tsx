@@ -4,6 +4,8 @@ import Navigation from '../components/Navigation';
 import EmergencyButton from '../components/EmergencyButton';
 import { capsuleApi, type MemoryCapsule } from '../lib/api';
 
+const CAPSULE_STORAGE_KEY = 'yuanxin_capsules';
+
 const moodEmojis: Record<string, string> = {
   happy: '😊',
   calm: '😌',
@@ -14,6 +16,11 @@ const moodEmojis: Record<string, string> = {
   excited: '🎉',
   peaceful: '🕊️',
 };
+
+const defaultCapsules: MemoryCapsule[] = [
+  { id: 1, title: '第一次被理解', content: '今天终于有人认真听我说话了，感觉很温暖...', mood: 'grateful', tags: '被理解', is_public: false, created_at: '2024-04-20', updated_at: '2024-04-20' },
+  { id: 2, title: '突破自我的时刻', content: '鼓起勇气做了之前不敢做的事，为自己骄傲！', mood: 'proud', tags: '成长', is_public: false, created_at: '2024-04-18', updated_at: '2024-04-18' },
+];
 
 const MemoryCapsuleWallPage: React.FC = () => {
   const [capsules, setCapsules] = useState<MemoryCapsule[]>([]);
@@ -45,12 +52,28 @@ const MemoryCapsuleWallPage: React.FC = () => {
       const res = await capsuleApi.getAll();
       if (res.data?.code === 200 && res.data?.data) {
         setCapsules(res.data.data.capsules || []);
+        return;
       }
     } catch (error) {
       console.error('Failed to fetch capsules:', error);
-    } finally {
-      setLoading(false);
     }
+    
+    // fallback to localStorage
+    const stored = localStorage.getItem(CAPSULE_STORAGE_KEY);
+    if (stored) {
+      try {
+        setCapsules(JSON.parse(stored));
+      } catch {
+        setCapsules(defaultCapsules);
+      }
+    } else {
+      setCapsules(defaultCapsules);
+    }
+    setLoading(false);
+  };
+
+  const saveToLocalStorage = (newCapsules: MemoryCapsule[]) => {
+    localStorage.setItem(CAPSULE_STORAGE_KEY, JSON.stringify(newCapsules));
   };
 
   const handleCreate = async () => {
@@ -69,18 +92,32 @@ const MemoryCapsuleWallPage: React.FC = () => {
 
       if (res.data?.code === 200) {
         toast.success('胶囊已创建');
-        setShowForm(false);
-        setNewTitle('');
-        setNewContent('');
-        setNewMood('happy');
         fetchCapsules();
       } else {
-        toast.error('创建失败');
+        throw new Error('API failed');
       }
     } catch (error) {
-      toast.error('创建失败');
+      // fallback: save to localStorage
+      const newCapsule: MemoryCapsule = {
+        id: Date.now(),
+        title: newTitle,
+        content: newContent,
+        mood: newMood,
+        tags: '',
+        is_public: false,
+        created_at: new Date().toISOString().split('T')[0],
+        updated_at: new Date().toISOString().split('T')[0],
+      };
+      const updated = [newCapsule, ...capsules];
+      setCapsules(updated);
+      saveToLocalStorage(updated);
+      toast.success('胶囊已创建（本地存储）');
     } finally {
       setSaving(false);
+      setShowForm(false);
+      setNewTitle('');
+      setNewContent('');
+      setNewMood('happy');
     }
   };
 
@@ -92,10 +129,16 @@ const MemoryCapsuleWallPage: React.FC = () => {
       if (res.data?.code === 200) {
         toast.success('已删除');
         fetchCapsules();
+        return;
       }
-    } catch (error) {
-      toast.error('删除失败');
+    } catch {
+      // fallback: delete from localStorage
     }
+    
+    const updated = capsules.filter(c => c.id !== id);
+    setCapsules(updated);
+    saveToLocalStorage(updated);
+    toast.success('已删除（本地存储）');
   };
 
   return (
@@ -125,48 +168,45 @@ const MemoryCapsuleWallPage: React.FC = () => {
               type="text"
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
-              className="w-full p-3 bg-white/10 rounded-2xl text-[#F5F0EB] border-none outline-none"
-              placeholder="给这个时刻起个标题"
+              placeholder="给胶囊起个标题"
+              className="w-full p-3 bg-white/10 border border-white/20 rounded-2xl text-[#F5F0EB] placeholder-[#F5F0EB]/50 focus:outline-none focus:border-pink-500/50"
             />
             
             <textarea
               value={newContent}
               onChange={(e) => setNewContent(e.target.value)}
-              className="w-full p-3 bg-white/10 rounded-2xl text-[#F5F0EB] border-none outline-none resize-none"
-              placeholder="记录这个让你感到治愈的时刻..."
+              placeholder="记录此刻的感受..."
               rows={4}
+              className="w-full p-3 bg-white/10 border border-white/20 rounded-2xl text-[#F5F0EB] placeholder-[#F5F0EB]/50 focus:outline-none focus:border-pink-500/50 resize-none"
             />
             
-            <div>
-              <p className="text-sm text-[#F5F0EB]/60 mb-2">选择心情</p>
-              <div className="flex flex-wrap gap-2">
-                {moods.map((m) => (
-                  <button
-                    key={m.id}
-                    onClick={() => setNewMood(m.id)}
-                    className={`px-3 py-2 rounded-full text-sm ${
-                      newMood === m.id 
-                        ? 'bg-pink-500/50 text-white' 
-                        : 'bg-white/10 text-[#F5F0EB]/60'
-                    }`}
-                  >
-                    {moodEmojis[m.id]} {m.label}
-                  </button>
-                ))}
-              </div>
+            <div className="flex gap-2 flex-wrap">
+              {moods.map((mood) => (
+                <button
+                  key={mood.id}
+                  onClick={() => setNewMood(mood.id)}
+                  className={`px-3 py-1 rounded-2xl text-sm ${
+                    newMood === mood.id
+                      ? 'bg-pink-500/50 text-white'
+                      : 'bg-white/10 text-[#F5F0EB]/70'
+                  }`}
+                >
+                  {moodEmojis[mood.id]} {mood.label}
+                </button>
+              ))}
             </div>
-
+            
             <div className="flex gap-3">
               <button
                 onClick={() => setShowForm(false)}
-                className="flex-1 py-3 bg-white/10 rounded-2xl text-[#F5F0EB]"
+                className="flex-1 py-2 bg-white/10 rounded-2xl text-[#F5F0EB]"
               >
                 取消
               </button>
               <button
                 onClick={handleCreate}
                 disabled={saving}
-                className="flex-1 py-3 bg-gradient-to-r from-pink-500 to-purple-500 rounded-2xl text-white font-medium disabled:opacity-50"
+                className="flex-1 py-2 bg-gradient-to-r from-pink-500 to-purple-500 rounded-2xl text-white disabled:opacity-50"
               >
                 {saving ? '保存中...' : '保存'}
               </button>
@@ -174,38 +214,30 @@ const MemoryCapsuleWallPage: React.FC = () => {
           </div>
         )}
 
-        <div className="grid grid-cols-2 gap-4">
-          {loading ? (
-            <div className="col-span-2 text-center py-8 text-[#F5F0EB]/60">
-              加载中...
-            </div>
-          ) : capsules.length === 0 ? (
-            <div className="col-span-2 text-center py-8 text-[#F5F0EB]/60">
-              还没有记忆胶囊，快创建一个吧！
-            </div>
-          ) : (
-            capsules.map((capsule) => (
-              <div 
-                key={capsule.id} 
-                className="glass-card p-4 text-center hover:bg-white/10 transition-colors cursor-pointer group"
-                onClick={() => handleDelete(capsule.id)}
-              >
-                <div className="text-4xl mb-2">{moodEmojis[capsule.mood] || '💝'}</div>
-                <h3 className="font-medium text-[#F5F0EB] text-sm">{capsule.title}</h3>
-                <p className="text-xs text-[#F5F0EB]/50 mt-1">
-                  {capsule.created_at?.split('T')[0]}
-                </p>
+        {loading ? (
+          <div className="text-center py-8 text-[#F5F0EB]/60">加载中...</div>
+        ) : capsules.length === 0 ? (
+          <div className="text-center py-8 text-[#F5F0EB]/60">还没有记忆胶囊，点击上方创建第一个吧</div>
+        ) : (
+          capsules.map((capsule) => (
+            <div key={capsule.id} className="glass-card p-4">
+              <div className="flex items-start justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl">{moodEmojis[capsule.mood] || '💭'}</span>
+                  <h3 className="font-medium text-[#F5F0EB]">{capsule.title}</h3>
+                </div>
+                <button
+                  onClick={() => handleDelete(capsule.id)}
+                  className="text-red-400/70 hover:text-red-400 text-sm"
+                >
+                  删除
+                </button>
               </div>
-            ))
-          )}
-        </div>
-
-        <div className="glass-card p-6 text-center">
-          <p className="text-sm text-[#F5F0EB]/60">
-            记忆胶囊可以保存那些让你感到被治愈的时刻，
-            在需要的时候打开，重温那份温暖。
-          </p>
-        </div>
+              <p className="text-sm text-[#F5F0EB]/70 mb-2 line-clamp-3">{capsule.content}</p>
+              <p className="text-xs text-[#F5F0EB]/50">{capsule.created_at}</p>
+            </div>
+          ))
+        )}
       </div>
 
       <Navigation currentPath="/memory-capsules" />

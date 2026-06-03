@@ -23,11 +23,14 @@ const KnowledgeLibraryPage: React.FC = () => {
   const fetchCategories = async () => {
     try {
       const res = await knowledgeApi.getCategories();
-      if (res.data?.code === 200 && res.data?.data) {
-        setCategories(res.data.data.categories || []);
+      if (res.data?.code === 200 && res.data?.data?.categories?.length > 0) {
+        setCategories(res.data.data.categories);
+      } else {
+        setCategories([]); // 无数据
       }
     } catch (error) {
       console.error('Failed to fetch categories:', error);
+      setCategories([]); // API 失败，fallback
     }
   };
 
@@ -39,11 +42,14 @@ const KnowledgeLibraryPage: React.FC = () => {
         params.category = selectedCategory;
       }
       const res = await knowledgeApi.getArticles(params);
-      if (res.data?.code === 200 && res.data?.data) {
-        setArticles(res.data.data.articles || []);
+      if (res.data?.code === 200 && res.data?.data?.articles?.length > 0) {
+        setArticles(res.data.data.articles);
+      } else {
+        setArticles([]); // API 无数据，fallback 到 defaultArticles
       }
     } catch (error) {
       console.error('Failed to fetch articles:', error);
+      setArticles([]); // API 失败，fallback
     } finally {
       setLoading(false);
     }

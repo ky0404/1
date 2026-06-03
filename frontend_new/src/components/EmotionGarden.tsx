@@ -66,11 +66,12 @@ const EmotionGarden: React.FC<EmotionGardenProps> = ({ stats }) => {
   }, [stats]);
 
   const data = gardenStats || { totalDays: 0, streakDays: 0, avgScore: 0 };
+  const hasData = data.totalDays > 0;
 
   const plants = [
-    { type: 'happy', label: '快乐种子', count: Math.floor(data.avgScore * 2), icon: Leaf, color: 'text-green-400' },
-    { type: 'sad', label: '忧伤水滴', count: Math.floor((10 - data.avgScore)), icon: Droplets, color: 'text-blue-400' },
-    { type: 'energy', label: '能量火焰', count: data.streakDays, icon: Flame, color: 'text-orange-400' },
+    { type: 'happy', label: '快乐种子', count: hasData ? Math.floor(data.avgScore * 2) : 0, icon: Leaf, color: 'text-green-400' },
+    { type: 'sad', label: '忧伤水滴', count: hasData ? Math.floor((10 - data.avgScore)) : 0, icon: Droplets, color: 'text-blue-400' },
+    { type: 'energy', label: '能量火焰', count: hasData ? data.streakDays : 0, icon: Flame, color: 'text-orange-400' },
   ];
 
   return (

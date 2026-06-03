@@ -1,25 +1,28 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MessageCircle, Archive, FileText, Settings, Shield, Bell, HelpCircle, LogOut, Trash2, Palette } from 'lucide-react';
 import { toast } from 'sonner';
 import Navigation from '../components/Navigation';
 import EmergencyButton from '../components/EmergencyButton';
 import { authApi, historyApi } from '../lib/api';
-
-interface UserDisplay {
-  name: string;
-  avatar: string;
-  signature: string;
-}
-
-const defaultUserInfo: UserDisplay = {
-  name: '小雨',
-  avatar: 'https://photo.bj.ide.test.sankuai.com/?keyword=girl,avatar,cute&width=80&height=80',
-  signature: '每一天都是新的开始 🌱'
-};
+import type { AuthUser } from '@/types';
 
 const SettingsRoomPage: React.FC = () => {
   const navigate = useNavigate();
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    authApi.me()
+      .then(res => {
+        if (res.data?.code === 200) setUser(res.data.data);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  const displayName = user?.username || user?.email?.split('@')[0] || '未登录';
+  const displayAvatar = user?.avatar || 'https://photo.bj.ide.test.sankuai.com/?keyword=girl,avatar,cute&width=80&height=80';
 
   const stats = [
     { label: '对话次数', value: '128', icon: MessageCircle, color: 'purple' },
@@ -93,7 +96,6 @@ const SettingsRoomPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#1A153A] via-[#3D2C5E] to-[#1A153A] relative overflow-hidden">
-      {/* 背景樱花花瓣动画 */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {[...Array(15)].map((_, i) => (
           <div
@@ -114,15 +116,13 @@ const SettingsRoomPage: React.FC = () => {
       {/* 用户信息卡片 */}
       <div className="glass-card border-b border-white/20 px-6 py-8 relative z-10">
         <div className="max-w-md mx-auto text-center">
-          <>
-            <img 
-              src={defaultUserInfo.avatar} 
-              alt="用户头像" 
-              className="w-20 h-20 rounded-full mx-auto object-cover border-4 border-white/20 shadow-lg mb-4"
-            />
-            <h1 className="text-2xl font-bold text-gradient mb-2">{defaultUserInfo.name}</h1>
-            <p className="text-[#F5F0EB]/90">{defaultUserInfo.signature}</p>
-          </>
+          <img 
+            src={displayAvatar} 
+            alt="用户头像" 
+            className="w-20 h-20 rounded-full mx-auto object-cover border-4 border-white/20 shadow-lg mb-4"
+          />
+          <h1 className="text-2xl font-bold text-gradient mb-2">{displayName}</h1>
+          <p className="text-[#F5F0EB]/90">{user?.email || '点击登录开启专属陪伴'}</p>
         </div>
       </div>
 
@@ -161,7 +161,7 @@ const SettingsRoomPage: React.FC = () => {
           </button>
 
           <button 
-            onClick={() => navigate('/memory-capsule')}
+            onClick={() => navigate('/memory-capsules')}
             className="glass-card p-4 hover:bg-white/10 transition-all duration-300 text-left"
           >
             <div className="flex items-center gap-4">
@@ -176,7 +176,7 @@ const SettingsRoomPage: React.FC = () => {
           </button>
 
           <button 
-            onClick={() => navigate('/inner-map')}
+            onClick={() => navigate('/profile')}
             className="glass-card p-4 hover:bg-white/10 transition-all duration-300 text-left"
           >
             <div className="flex items-center gap-4">
@@ -184,8 +184,8 @@ const SettingsRoomPage: React.FC = () => {
                 <FileText className="w-6 h-6 text-green-300" />
               </div>
               <div>
-                <h3 className="font-medium text-[#F5F0EB]">我的测评报告</h3>
-                <p className="text-sm text-[#F5F0EB]/70">心理测评结果汇总</p>
+                <h3 className="font-medium text-[#F5F0EB]">我的心理画像</h3>
+                <p className="text-sm text-[#F5F0EB]/70">AI 生成的性格分析</p>
               </div>
             </div>
           </button>

@@ -41,14 +41,14 @@ const EmotionWave: React.FC<EmotionWaveProps> = ({ data }) => {
   }, [data]);
 
   const mockData = waveData.length > 0 ? waveData : [
-    { time: '周一', score: 6.5 },
-    { time: '周二', score: 7.2 },
-    { time: '周三', score: 5.8 },
-    { time: '周四', score: 8.1 },
-    { time: '周五', score: 7.5 },
-    { time: '周六', score: 8.5 },
-    { time: '周日', score: 7.8 },
+    { time: '暂无', score: 0 },
+    { time: '数据', score: 0 },
+    { time: '快去', score: 0 },
+    { time: '记录', score: 0 },
+    { time: '吧~', score: 0 },
   ];
+
+  const hasData = waveData.length > 0;
 
   const maxScore = 10;
   const height = 120;
