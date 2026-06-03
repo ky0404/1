@@ -1,34 +1,25 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, MessageCircle, Archive, FileText, Settings, Shield, Bell, HelpCircle, LogOut, Trash2, Palette } from 'lucide-react';
+import { MessageCircle, Archive, FileText, Settings, Shield, Bell, HelpCircle, LogOut, Trash2, Palette } from 'lucide-react';
 import { toast } from 'sonner';
-import { useQuery } from '@tanstack/react-query';
 import Navigation from '../components/Navigation';
 import EmergencyButton from '../components/EmergencyButton';
-import Skeleton from '../components/ui/skeleton';
-import { authApi, profileApi, emotionApi, historyApi } from '../lib/api';
-import type { AuthUser } from '@/types';
+import { authApi, historyApi } from '../lib/api';
+
+interface UserDisplay {
+  name: string;
+  avatar: string;
+  signature: string;
+}
+
+const defaultUserInfo: UserDisplay = {
+  name: '小雨',
+  avatar: 'https://photo.bj.ide.test.sankuai.com/?keyword=girl,avatar,cute&width=80&height=80',
+  signature: '每一天都是新的开始 🌱'
+};
 
 const SettingsRoomPage: React.FC = () => {
   const navigate = useNavigate();
-  const [user, setUser] = useState<AuthUser | null>(null);
-
-  const { data: userInfo, isLoading } = useQuery({
-    queryKey: ['userProfile'],
-    queryFn: async () => {
-      const res = await authApi.me();
-      return res.data?.data;
-    },
-    enabled: !!user,
-  });
-
-  const defaultUserInfo = {
-    name: '小雨',
-    avatar: 'https://photo.bj.ide.test.sankuai.com/?keyword=girl,avatar,cute&width=80&height=80',
-    signature: '每一天都是新的开始 🌱'
-  };
-
-  const data = userInfo || defaultUserInfo;
 
   const stats = [
     { label: '对话次数', value: '128', icon: MessageCircle, color: 'purple' },
@@ -123,23 +114,15 @@ const SettingsRoomPage: React.FC = () => {
       {/* 用户信息卡片 */}
       <div className="glass-card border-b border-white/20 px-6 py-8 relative z-10">
         <div className="max-w-md mx-auto text-center">
-          {isLoading ? (
-            <>
-              <Skeleton className="w-20 h-20 rounded-full mx-auto mb-4" />
-              <Skeleton className="w-32 h-8 mx-auto mb-2" />
-              <Skeleton className="w-48 h-4 mx-auto" />
-            </>
-          ) : (
-            <>
-              <img 
-                src={data.avatar || defaultUserInfo.avatar} 
-                alt="用户头像" 
-                className="w-20 h-20 rounded-full mx-auto object-cover border-4 border-white/20 shadow-lg mb-4"
-              />
-              <h1 className="text-2xl font-bold text-gradient mb-2">{data.name || defaultUserInfo.name}</h1>
-              <p className="text-[#F5F0EB]/90">{data.signature || defaultUserInfo.signature}</p>
-            </>
-          )}
+          <>
+            <img 
+              src={defaultUserInfo.avatar} 
+              alt="用户头像" 
+              className="w-20 h-20 rounded-full mx-auto object-cover border-4 border-white/20 shadow-lg mb-4"
+            />
+            <h1 className="text-2xl font-bold text-gradient mb-2">{defaultUserInfo.name}</h1>
+            <p className="text-[#F5F0EB]/90">{defaultUserInfo.signature}</p>
+          </>
         </div>
       </div>
 

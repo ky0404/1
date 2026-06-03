@@ -148,6 +148,9 @@ export const profileApi = {
   get: () =>
     api.get<{ code: number; data: UserProfile }>('/profile'),
 
+  update: (data: Partial<UserProfile>) =>
+    api.put<{ code: number; data: UserProfile }>('/profile', data),
+
   reset: () =>
     api.delete<{ code: number; data: { cleared: boolean; user_id?: number } }>('/profile/reset'),
 };

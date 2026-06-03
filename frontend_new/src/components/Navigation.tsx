@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, MessageCircle, User, TrendingUp, Wrench, Shield, Settings, BarChart, Search, BookOpen, Heart, Palette, Archive } from 'lucide-react';
+import { Home, MessageCircle, TrendingUp, Settings, Heart } from 'lucide-react';
 
 interface NavItem {
   path: string;
@@ -9,19 +9,11 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { path: '/', icon: Home, label: '小屋玄关' },
-  { path: '/chat', icon: MessageCircle, label: '陪伴对话' },
-  { path: '/dashboard', icon: BarChart, label: '情绪花园' },
-  { path: '/report', icon: Search, label: '内心地图' },
-  { path: '/library', icon: BookOpen, label: '知识花园' },
-  { path: '/healing-tools', icon: Heart, label: '疗愈百宝箱' },
-  { path: '/profile', icon: User, label: '心理画像' },
-  { path: '/growth', icon: TrendingUp, label: '成长轨迹' },
-  { path: '/tools', icon: Wrench, label: '心理工具' },
-  { path: '/safety', icon: Shield, label: '安全守护' },
-  { path: '/personalization', icon: Palette, label: '灵魂调音台' },
-  { path: '/memory-capsules', icon: Archive, label: '治愈胶囊墙' },
-  { path: '/settings', icon: Settings, label: '个人中心' },
+  { path: '/', icon: Home, label: '首页' },
+  { path: '/chat', icon: MessageCircle, label: '对话' },
+  { path: '/dashboard', icon: Heart, label: '情绪' },
+  { path: '/growth', icon: TrendingUp, label: '成长' },
+  { path: '/settings', icon: Settings, label: '我的' },
 ];
 
 interface NavigationProps {

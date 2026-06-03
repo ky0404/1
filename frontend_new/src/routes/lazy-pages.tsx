@@ -43,7 +43,7 @@ export function createPageRoute(component: keyof typeof pages) {
 
 export const routes = [
   { path: '/', component: 'IndexPage' as const },
-  { path: '/chat', component: 'ChatRoomPage' as const },
+  { path: '/chat', component: 'ChatPage' as const },
   { path: '/dashboard', component: 'EmotionDashboardPage' as const },
   { path: '/profile', component: 'ProfileRoomPage' as const },
   { path: '/growth', component: 'GrowthRoomPage' as const },

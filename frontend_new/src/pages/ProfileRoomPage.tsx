@@ -8,6 +8,50 @@ import Skeleton from '../components/ui/skeleton';
 import { profileApi } from '../lib/api';
 import { toast } from 'sonner';
 
+interface ProfileData {
+  emotionalStability: number;
+  cognitiveStyle: number;
+  copingStyle: number;
+  attachmentType: number;
+  optimism: number;
+  traits: Array<{ label: string; description: string }>;
+  triggers: string[];
+  healingMethods: string[];
+  deepNeeds: string[];
+}
+
+const defaultProfileData: ProfileData = {
+  emotionalStability: 75,
+  cognitiveStyle: 80,
+  copingStyle: 70,
+  attachmentType: 85,
+  optimism: 90,
+  traits: [
+    { label: '敏感细腻', description: '你能够敏锐地感知自己和他人的情绪变化' },
+    { label: '善于思考', description: '你喜欢深入思考问题的本质和解决方案' },
+    { label: '情感丰富', description: '你的情感世界丰富多彩，体验深刻' },
+    { label: '追求成长', description: '你总是希望变得更好，不断学习和进步' }
+  ],
+  triggers: [
+    '被误解时的委屈感',
+    '面对选择时的犹豫',
+    '感受到压力时的焦虑',
+    '孤独时的脆弱感'
+  ],
+  healingMethods: [
+    '深度倾听和理解',
+    '温和的肯定和鼓励',
+    '认知重构练习',
+    '正念冥想引导'
+  ],
+  deepNeeds: [
+    '渴望被真正理解',
+    '需要无评判的倾听',
+    '希望获得情感支持',
+    '追求内心的平静'
+  ]
+};
+
 const ProfileRoomPage: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
 
@@ -15,12 +59,12 @@ const ProfileRoomPage: React.FC = () => {
     queryKey: ['userProfile'],
     queryFn: async () => {
       const res = await profileApi.get();
-      return res.data?.data;
+      return res.data?.data as unknown as ProfileData | undefined;
     },
   });
 
   const updateProfileMutation = useMutation({
-    mutationFn: (data: any) => profileApi.update(data),
+    mutationFn: (data: Partial<ProfileData>) => profileApi.update(data as any),
     onSuccess: () => {
       refetch();
       setIsEditing(false);
@@ -33,43 +77,19 @@ const ProfileRoomPage: React.FC = () => {
 
   const handleSave = () => {
     if (profileData) {
-      updateProfileMutation.mutate(profileData);
+      updateProfileMutation.mutate(profileData as any);
     }
   };
 
-  const defaultProfileData = {
-    emotionalStability: 75,
-    cognitiveStyle: 80,
-    copingStyle: 70,
-    attachmentType: 85,
-    optimism: 90,
-    traits: [
-      { label: '敏感细腻', description: '你能够敏锐地感知自己和他人的情绪变化' },
-      { label: '善于思考', description: '你喜欢深入思考问题的本质和解决方案' },
-      { label: '情感丰富', description: '你的情感世界丰富多彩，体验深刻' },
-      { label: '追求成长', description: '你总是希望变得更好，不断学习和进步' }
-    ],
-    triggers: [
-      '被误解时的委屈感',
-      '面对选择时的犹豫',
-      '感受到压力时的焦虑',
-      '孤独时的脆弱感'
-    ],
-    healingMethods: [
-      '深度倾听和理解',
-      '温和的肯定和鼓励',
-      '认知重构练习',
-      '正念冥想引导'
-    ],
-    deepNeeds: [
-      '渴望被真正理解',
-      '需要无评判的倾听',
-      '希望获得情感支持',
-      '追求内心的平静'
-    ]
-  };
+  const data: ProfileData = profileData || defaultProfileData;
 
-  const data = profileData || defaultProfileData;
+  const radarData = {
+    openness: data.emotionalStability,
+    conscientiousness: data.cognitiveStyle,
+    extraversion: data.copingStyle,
+    agreeableness: data.attachmentType,
+    neuroticism: data.optimism,
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#1A153A] via-[#3D2C5E] to-[#1A153A] relative overflow-hidden">
@@ -131,7 +151,7 @@ const ProfileRoomPage: React.FC = () => {
           ) : (
             <>
               <div className="h-64">
-                <PersonalityRadar data={data} />
+                <PersonalityRadar data={radarData} />
               </div>
               
               <div className="mt-4 text-center">
@@ -152,7 +172,7 @@ const ProfileRoomPage: React.FC = () => {
                 <Skeleton key={i} className="w-full h-12 rounded-2xl" />
               ))
             ) : (
-              (data.traits || defaultProfileData.traits).map((trait: any, index: number) => (
+              data.traits.map((trait, index) => (
                 <div key={index} className="flex items-start gap-3">
                   <div className="w-2 h-2 bg-purple-400 rounded-full mt-2"></div>
                   <div>
@@ -172,7 +192,7 @@ const ProfileRoomPage: React.FC = () => {
             <Skeleton className="w-full h-20 rounded-2xl" />
           ) : (
             <div className="flex flex-wrap gap-2">
-              {(data.triggers || defaultProfileData.triggers).map((trigger: string, index: number) => (
+              {data.triggers.map((trigger, index) => (
                 <span
                   key={index}
                   className="px-3 py-1 bg-orange-500/20 text-orange-300 rounded-2xl text-sm"
@@ -198,7 +218,7 @@ const ProfileRoomPage: React.FC = () => {
                 <Skeleton key={i} className="w-full h-12 rounded-2xl" />
               ))
             ) : (
-              (data.healingMethods || defaultProfileData.healingMethods).map((method: string, index: number) => (
+              data.healingMethods.map((method, index) => (
                 <div key={index} className="flex items-center gap-3">
                   <div className="w-8 h-8 bg-green-500/20 rounded-2xl flex items-center justify-center">
                     <span className="text-green-300 text-sm">✓</span>
@@ -219,7 +239,7 @@ const ProfileRoomPage: React.FC = () => {
                 <Skeleton key={i} className="w-full h-12 rounded-2xl" />
               ))
             ) : (
-              (data.deepNeeds || defaultProfileData.deepNeeds).map((need: string, index: number) => (
+              data.deepNeeds.map((need, index) => (
                 <div key={index} className="flex items-start gap-3">
                   <div className="w-2 h-2 bg-pink-400 rounded-full mt-2"></div>
                   <p className="text-[#F5F0EB]/90">{need}</p>
